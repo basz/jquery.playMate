@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+        <title>jQuery Plugin playmate</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript" ></script>
+        <script src="jquery.playMate.js" type="text/javascript"></script>
+
+        <script type="text/javascript" >
+            ;(function ( $, window, document, undefined ) {
+                $(document).ready(function($) {
+                    
+                    $("div.playMate")
+                    .playMate({'from': 1, 'length' : 48, 'path':'http://src.sencha.io/320/http://360player.nl/data/Puma/day_01/1305017018927/'})
+                    .on('loaded.playMate', function(event) {
+                        $(event.target).fadeIn(500);
+                        event.stopPropagation();
+                    }).on('mousedown', function(event) {
+//                        $(event.currentTarget).playMate('toggleDirection');
+            
+                        event.stopPropagation();
+                    });             
+           
+           
+                    $(".start").on('click', function(e) {
+                        $("div.playMate").data('plugin_playMate').play();
+                    });
+                    $(".stop").on('click', function(e) {
+                        $("div.playMate").data('plugin_playMate').stop();
+                    });
+                    $(".pause").on('click', function(e) {
+                        $("div.playMate").data('plugin_playMate').pause();
+                        
+                        $("div.playMate").data('plugin_playMate').setFps(Math.round(Math.random() * 12));
+                    });
+                    
+                    $(".direction").on('click', function(e) {
+                        $("div.playMate").data('plugin_playMate').toggleDirection();
+                    });
+                    $(".mode").on('click', function(e) {
+                        $("div.playMate").data('plugin_playMate').toggleMode();
+                    });
+
+
+                    $(".reset").on('click', function(e) {
+                        var data = [];
+                        
+                        data[0] = {length: 24, path: 'http://src.sencha.io/320/http://360player.nl/data/AmericanExpress/day_01/1330031941993/', fps: 25};
+                        data[1] = {length: 49, path: 'http://src.sencha.io/320/http://360player.nl/data/Puma/day_01/1305017018927/', fps: 25, autoPlay: true};
+                        
+                        var i = ($("div.playMate").data('plugin_playMate').options.length == 24) ? data[1] : data[0];
+                        
+                        $("div.playMate").data('plugin_playMate').reset(i);
+                    });
+                });
+            })( jQuery, window, document );
+        </script>
+    </head>
+    <body>
+
+        <div class="playMate" data-auto-play="false" data-play-mode="pingpong" data-play-direction="backward" data-length="24" data-path="http://src.sencha.io/320/http://360player.nl/data/AmericanExpress/day_01/1330031941993/" data-fps="30" style=""></div>
+
+
+        <div class="playMate" data-auto-play="false" data-play-mode="loop" style=""></div>
+        
+        
+        <span class="start">start</span>
+        <span class="pause">pause</span>
+        <span class="stop">stop</span>
+        <span class="mode">mode</span>
+        <span class="direction">toggle-direction</span>
+        
+        <span class="reset">reset</span>
+    </body>
+</html>
