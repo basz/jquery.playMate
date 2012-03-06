@@ -23,14 +23,75 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
  *
- * playMate v0.1 is a jquery plugin to animate an image sequence in various ways.
+ * playMate is a jquery plugin to animate an image sequence in various ways.
  * 
- * - 
+ * <div id="playMate"></div>
+ * 
+ * initialise with minimum configuration
+ * $('#playMate').playMate({length: 12, path: 'images/');
+ * 
+ * will start playing a new sequence
+ * $('#playMate').reset({path: 'images/some/other/sequence/');
+ * 
+ * - configuration options
+ * 
+ * autoPlay         : (boolean) false
+ * autoMode         : (string) loop | pingpong
+ * playDirection    : (string) forward | backward
+ * fps              : (int) 25 - frame per seconds
+ * from             : (int) 0 - the starting number of the sequence
+ * length           : (int) null - the number of images in the sequence
+ * path             : (string) null - required and must end with /
+ * filename         : (string) '###.jpg' - numerical pattern to use for sequence names
+ * 
+ * Public methods
+ * play();
+ * stop();
+ * pause();
+ * toggleMode();
+ * toggleDirection();
+ * reset(options);
+ * 
+ * Events handling
+ * 
+ * type 'loaded.playMate' - all images are preloaded (or failed)
+ * type 'started.playMate' - animation started
+ * type 'stopped.playMate' - animation stopped
+ * type 'paused.playMate' - animation paused
+ * 
+ * $('#playMate').on('loaded.playMate', function(e) {
+ *      $(e.currentTarget).fadeIn('fast');
+ * });
+ * 
+ * Characteristics
+ * - You should set a width and height on the element, or you won't see anything.
+ * - Preloads any images in the sequence, and displays an preloader image while loading.
+ * - Creates a absolutely positioned div in the element
+ * - Changes images by modifying the background-image url
+ * - Container has its overflow set to hidden
+ * - Images are centered by setting the background-position property
+ * - Images are scaled up/down to fit with 'background-size' set to 'contain' (CSS3)
+ * 
+ * An instance of the plugin is stored in the element and can be retrieved like so;
+ * 
+ * var pluginInstance = $('#playMate').data('plugin_playMate');
+ *  
+ * Accessing public methods
+ * 
+ * $('#playMate').playMate('someMethod', arg...);
+ * or
+ * $('#playMate').data('plugin_playMate').someMethod(arg...);
+ * 
+ * 
  * 
  */
 
 
+
+
 ;(function ( $, window, document, undefined ) {
+    
+    
     var pluginName = 'playMate',
     defaults = {
         autoPlay : false,
@@ -38,15 +99,20 @@
         playDirection : 'forward', /* forward | backward */
         fps      : 25,
         from     : 0,
-        length   : null, 
-        path     : null, 
+        length   : null,
+        path     : null,
+        loader   : './images/loader.gif',
         filename : '###.jpg',
-        protect  : false,
-        onLoaded: 'loaded.' + pluginName,
+        onLoaded : 'loaded.' + pluginName,
         onStarted: 'started.' + pluginName,
         onStopped: 'stopped.' + pluginName,
+        onPaused : 'paused.' + pluginName,
     };
     
+    /**
+    Represents a book.
+    @constructor
+    */
     function Plugin( element, options ) {
         this.element = element;
         this.$element = $(element);
@@ -64,8 +130,7 @@
         this._name = pluginName;
         
         this._init();
-    }
-
+    };
 
     Plugin.prototype._init = function () {
         var self = this;
@@ -76,30 +141,28 @@
         self.isReady = false;
         self.isPlaying = false;
         self.isPaused = false;
+
+        self.$element.css({
+            overflow:'hidden', 
+            position: 'relative'
+        });
         
-            
-//        if (self.options.protect) {
-//            self.$element.on("contextmenu", function (event) {
-//                return false;
-//            });
-//        }
-        
+        self.$imagesContainer = $('<div></div>');
+        self.$element.append(self.$imagesContainer);
+        self.$imagesContainer.css({
+            position: 'absolute',
+            width: '100%',
+            height: '100%'            
+        });
+
+        // bind 
         self.$element.on(self.options.onLoaded, self._onLoadedHandler);
 
-
-        self.currentImageIndex = null;
-
-        self._createImages();
-        
+        if (this.options.path && this.options.length)
+            self._setup();
     };
     
-    Plugin.prototype._removeImages = function() {
-        while (this.$images.length) {
-            this.$images.pop().remove();
-        }
-    };
-    
-    Plugin.prototype._createImages = function() {
+    Plugin.prototype._setup = function() {
         var self = this;
         
         var filenamePattern = this.options.filename;
@@ -107,12 +170,11 @@
         var filenameLength = r.exec(filenamePattern)[0].length;
 
         var done = 0;
-        for (var i = this.options.from; i < this.options.length + this.options.from; i++) {
+        
+        for (var i = parseInt(this.options.from); i < parseInt(this.options.length) + parseInt(this.options.from); i++) {
             var src = this.options.path + filenamePattern.replace(r, this._strPad(i, filenameLength, '0'));
 
             var $im = $(new Image());
-            $im.css({'position':'relative', 'display': 'none'});
-
             $im.one('load error', function(e) {
                 done++;
                 if (done == self.options.length) {
@@ -120,13 +182,22 @@
                         self.$element.trigger($.Event(self.options.onLoaded));
                     }
                 }
-            });
+            }).attr('src', src);
 
             self.$images.push($im);
-            $(this.$element).append($im);
-            
+
             self.isLoading = true;
-            $im.attr('src', src);
+        }
+ 
+        if (self.isLoading && this.options.loader) {
+            self.$imagesContainer.css({'background' : 'url(' + this.options.loader + ') no-repeat center center'});
+        }
+ 
+    };
+     
+     Plugin.prototype._teardown = function() {
+        while (this.$images.length) {
+            this.$images.pop().remove();
         }
     };
     
@@ -144,6 +215,7 @@
         }, 1000/self.options.fps);
 
         self.isPlaying = true;
+        self.$element.trigger($.Event(self.options.onStarted));
     };
  
     Plugin.prototype.stop = function() {
@@ -157,9 +229,11 @@
 
         self.isPlaying = false;
         self.isPaused = false;
-
+        self.$element.trigger($.Event(self.options.onStopped));
+        
         // rewind
         self._setNextImage(true);
+        
     };
         
     Plugin.prototype.pause = function() {
@@ -168,17 +242,11 @@
         if (!self.isReady || !self.isPlaying)
             return false;
 
-        if (!self.isPlaying) {
-            self._requestedInterval = requestInterval(function() {
-                self._setNextImage();
-            }, 1000/self.options.fps);
-
-            self.isPlaying = true;
-            self.isPaused = false;
-        } else {
+        if (self._requestedInterval) {
             clearRequestInterval(self._requestedInterval);
             self.isPlaying = false;
             self.isPaused = true;
+            self.$element.trigger($.Event(self.options.onPaused));
         }
     };
 
@@ -199,9 +267,10 @@
                 delete this.options[i];
             } 
         }
+
         this.stop();
-        this._removeImages();
-        this._createImages();
+        this._teardown();
+        this._setup();
     };
 
     Plugin.prototype.setFps = function(fps) {
@@ -222,10 +291,6 @@
     Plugin.prototype._setNextImage = function(resetToFirst) {
         var self = this;
 
-        if (self.$images[self.currentImageIndex]) {
-            self.$images[self.currentImageIndex].hide();
-        }
-
         if (!!resetToFirst)
             self.currentImageIndex = 0;
         else
@@ -239,8 +304,14 @@
             self.currentImageIndex = 0;
         }
 
-        this.$images[self.currentImageIndex].show();
-            
+        self.$imagesContainer.css({
+            backgroundImage: 'url(' + self.$images[self.currentImageIndex].attr('src') + ')',
+            backgroundPosition: 'center center',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'contain' /* css3, keeps images inside box */
+        });
+
+
         if (self.options.playMode == 'pingpong' && ((self.options.playDirection == 'backward' && self.currentImageIndex <= 0) || (self.options.playDirection == 'forward' && self.currentImageIndex >= self.options.length - 1))) {
             self.toggleDirection();
         }
@@ -267,34 +338,30 @@
         self.isReady = true;
         self.isLoading = false;
 
-        self._setNextImage(true); // will set sequence to first image
+        if (self.options.loader) {
+            self.$imagesContainer.css({'background' : ''});
+        }
+
+        self._setNextImage(true);
                     
         if (self.options.autoPlay)
             self.play();
     }
     
     $.fn[pluginName] = function ( ) {
-        
         var args = arguments;
-    	
         return this.each(function () {
             var pluginInstance = $(this).data('plugin_' + pluginName);
-    		
+
             if (!pluginInstance) {
                 $(this).data('plugin_' + pluginName, new Plugin( this, args[0] ));
-                
-                return;
-            }
-
-            if (args[0]) {
+            } else if (args[0] && typeof args[0] == 'string') {
                 if (args[0].substring(0,1) != '_' && typeof pluginInstance[args[0]] == 'function') {
                     return pluginInstance[args[0]].apply(pluginInstance, Array.prototype.slice.call(args, 1));
                 } else {
                     $.error( 'Method "' + args[0] + '" does not exist in plugin "'+pluginName+'"!');
                 }
             }
-            
-            return;
         });
     }
 
@@ -320,10 +387,10 @@
      */
     window.requestInterval = function(fn, delay) {
     
-        if( !window.requestAnimationFrame       && 
+        if( !window.requestAnimationFrame && 
             !window.webkitRequestAnimationFrame && 
             !(window.mozRequestAnimationFrame && window.mozCancelRequestAnimationFrame) && // Firefox 5 ships without cancel support
-            !window.oRequestAnimationFrame      && 
+            !window.oRequestAnimationFrame && 
             !window.msRequestAnimationFrame)
             return ( window.setInterval(fn, delay));
 

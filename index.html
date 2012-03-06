@@ -11,7 +11,7 @@
                 $(document).ready(function($) {
                     
                     $("div.playMate")
-                    .playMate({'from': 1, 'length' : 48, 'path':'http://src.sencha.io/320/http://360player.nl/data/Puma/day_01/1305017018927/'})
+                    .playMate({'from': 1, 'length' : 48, 'path':'http://src.sencha.io/640/640/http://360player.nl/data/Puma/day_01/1305017018927/'})
                     .on('loaded.playMate', function(event) {
                         $(event.target).fadeIn(500);
                         event.stopPropagation();
@@ -30,8 +30,6 @@
                     });
                     $(".pause").on('click', function(e) {
                         $("div.playMate").data('plugin_playMate').pause();
-                        
-                        $("div.playMate").data('plugin_playMate').setFps(Math.round(Math.random() * 12));
                     });
                     
                     $(".direction").on('click', function(e) {
@@ -45,12 +43,16 @@
                     $(".reset").on('click', function(e) {
                         var data = [];
                         
-                        data[0] = {length: 24, path: 'http://src.sencha.io/320/http://360player.nl/data/AmericanExpress/day_01/1330031941993/', fps: 25};
-                        data[1] = {length: 49, path: 'http://src.sencha.io/320/http://360player.nl/data/Puma/day_01/1305017018927/', fps: 25, autoPlay: true};
+                        data[0] = {length: 24, path: 'http://src.sencha.io/320/320/http://360player.nl/data/AmericanExpress/day_01/1330031941993/', fps: 25};
+                        data[1] = {length: 49, path: 'http://src.sencha.io/320/320/http://360player.nl/data/Puma/day_01/1305017018927/', fps: 25, autoPlay: true};
                         
                         var i = ($("div.playMate").data('plugin_playMate').options.length == 24) ? data[1] : data[0];
                         
                         $("div.playMate").data('plugin_playMate').reset(i);
+                    });
+                    $(".fps").on('click', function(e) {
+                        console.log($("div.playMate").data('plugin_playMate'));
+                        $("div.playMate").data('plugin_playMate').setFps(Math.round(Math.random() * 12));
                     });
                 });
             })( jQuery, window, document );
@@ -58,18 +60,19 @@
     </head>
     <body>
 
-        <div class="playMate" data-auto-play="false" data-play-mode="pingpong" data-play-direction="backward" data-length="24" data-path="http://src.sencha.io/320/http://360player.nl/data/AmericanExpress/day_01/1330031941993/" data-fps="30" style=""></div>
+        <div class="playMate" data-auto-play="false" data-play-mode="pingpong" data-play-direction="backward" data-length="24" data-path="http://src.sencha.io/320/320/http://360player.nl/data/AmericanExpress/day_01/1330031941993/" data-fps="30" style=""></div>
 
 
-        <div class="playMate" data-auto-play="false" data-play-mode="loop" style=""></div>
+        <div class="playMate" data-auto-play="true" data-play-mode="loop" style=""></div>
         
         
-        <span class="start">start</span>
-        <span class="pause">pause</span>
-        <span class="stop">stop</span>
-        <span class="mode">mode</span>
-        <span class="direction">toggle-direction</span>
+        <span class="start">start</span> |
+        <span class="pause">pause</span> |
+        <span class="stop">stop</span> |
+        <span class="mode">mode</span> |
+        <span class="direction">toggle-direction</span> |
         
-        <span class="reset">reset</span>
+        <span class="reset">reset</span> |
+        <span class="fps">rand(fps)</span>
     </body>
 </html>
