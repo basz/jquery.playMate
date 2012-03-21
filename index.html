@@ -11,7 +11,7 @@
                 $(document).ready(function($) {
                     
                     $("div.playMate")
-                    .playMate({'from': 1, 'length' : 48, 'path':'http://src.sencha.io/640/640/http://360player.nl/data/Puma/day_01/1305017018927/'})
+                    .playMate({'from': 1, 'length' : 24, 'path':'images/', fps:15})
                     .on('loaded.playMate', function(event) {
                         $(event.target).fadeIn(500);
                         event.stopPropagation();
@@ -60,12 +60,9 @@
     </head>
     <body>
 
-        <div class="playMate" data-auto-play="false" data-play-mode="pingpong" data-play-direction="backward" data-length="24" data-path="http://src.sencha.io/320/320/http://360player.nl/data/AmericanExpress/day_01/1330031941993/" data-fps="30" style=""></div>
-
-
-        <div class="playMate" data-auto-play="true" data-play-mode="loop" style=""></div>
+        <div class="playMate" data-auto-play="true" style="width:600px; height:600px; background-color: #efefef"></div>
         
-        
+        <div style="width:600px;text-align: center;">
         <span class="start">start</span> |
         <span class="pause">pause</span> |
         <span class="stop">stop</span> |
@@ -74,5 +71,6 @@
         
         <span class="reset">reset</span> |
         <span class="fps">rand(fps)</span>
+        </div>
     </body>
 </html>

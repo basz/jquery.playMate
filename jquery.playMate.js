@@ -87,11 +87,7 @@
  */
 
 
-
-
 ;(function ( $, window, document, undefined ) {
-    
-    
     var pluginName = 'playMate',
     defaults = {
         autoPlay : false,
@@ -109,10 +105,6 @@
         onPaused : 'paused.' + pluginName,
     };
     
-    /**
-    Represents a book.
-    @constructor
-    */
     function Plugin( element, options ) {
         this.element = element;
         this.$element = $(element);
@@ -182,6 +174,8 @@
                         self.$element.trigger($.Event(self.options.onLoaded));
                     }
                 }
+                $('span.loaded', self.$loadCounter).html(done);
+        
             }).attr('src', src);
 
             self.$images.push($im);
@@ -191,6 +185,14 @@
  
         if (self.isLoading && this.options.loader) {
             self.$imagesContainer.css({'background' : 'url(' + this.options.loader + ') no-repeat center center'});
+            
+            self.$loadCounter = $('<div><span class="loaded">0</span> van <span class="total">x</span></div>');
+            self.$loadCounter.css({position:'absolute', textAlign: 'center', top: '55%', left: '50%', width:'100px', marginTop: '0', marginLeft: '-50px', 	color: '#cfcfcf'});
+        
+        
+            self.$element.append(self.$loadCounter);
+            
+            $('span.total', self.$loadCounter).html(self.$images.length);
         }
  
     };
@@ -340,6 +342,7 @@
 
         if (self.options.loader) {
             self.$imagesContainer.css({'background' : ''});
+            self.$loadCounter.remove();
         }
 
         self._setNextImage(true);
